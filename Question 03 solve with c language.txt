@@ -1,0 +1,64 @@
+#include <stdio.h>
+
+int main() {
+    int n_frames, n_pages;
+
+    printf("Enter number of frames: ");
+    scanf("%d", &n_frames);
+
+    printf("Enter number of page references: ");
+    scanf("%d", &n_pages);
+
+    int pages[100];
+    printf("Enter the reference string (space-separated): ");
+    for (int i = 0; i < n_pages; i++) {
+        scanf("%d", &pages[i]);
+    }
+
+    int frames[10];
+    for (int i = 0; i < n_frames; i++) {
+        frames[i] = -1; // -1 indicates empty frame
+    }
+
+    int page_faults = 0;
+    int next_to_replace = 0; // FIFO pointer
+
+    printf("\n--- Frame Contents After Each Reference ---\n");
+
+    for (int i = 0; i < n_pages; i++) {
+        int current_page = pages[i];
+        int found = 0;
+
+        // Check if page already exists in frames (Page Hit)
+        for (int j = 0; j < n_frames; j++) {
+            if (frames[j] == current_page) {
+                found = 1;
+                break;
+            }
+        }
+
+        // If page is not found (Page Fault)
+        if (!found) {
+            frames[next_to_replace] = current_page;
+            next_to_replace = (next_to_replace + 1) % n_frames;
+            page_faults++;
+        }
+
+        // Display current reference and frame status
+        printf("Ref %2d -> [ ", current_page);
+        for (int j = 0; j < n_frames; j++) {
+            if (frames[j] == -1)
+                printf("- ");
+            else
+                printf("%d ", frames[j]);
+        }
+        if (!found)
+            printf("] -> Page Fault\n");
+        else
+            printf("] -> Page Hit\n");
+    }
+
+    printf("\nTotal Number of Page Faults = %d\n", page_faults);
+
+    return 0;
+}

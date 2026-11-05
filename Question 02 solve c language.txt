@@ -1,0 +1,98 @@
+#include <stdio.h>
+
+struct Process {
+    int pid;
+    int at;
+    int bt;
+    int ct;
+    int tat;
+    int wt;
+    int completed;
+};
+
+int main() {
+    int n;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+
+    struct Process p[100];
+    for (int i = 0; i < n; i++) {
+        p[i].pid = i + 1;
+        printf("Process %d - Arrival Time: ", i + 1);
+        scanf("%d", &p[i].at);
+        printf("Process %d - Burst Time: ", i + 1);
+        scanf("%d", &p[i].bt);
+        p[i].completed = 0;
+    }
+
+    int current_time = 0, completed_count = 0;
+    float total_wt = 0, total_tat = 0;
+
+    printf("\n--- Gantt Chart (Execution Order) ---\n|");
+    
+    int gantt_p[100], gantt_time[100], g_idx = 0;
+
+    while (completed_count < n) {
+        int shortest_idx = -1;
+        int min_bt = 99999;
+
+        // Find available process with shortest burst time
+        for (int i = 0; i < n; i++) {
+            if (p[i].at <= current_time && !p[i].completed) {
+                if (p[i].bt < min_bt) {
+                    min_bt = p[i].bt;
+                    shortest_idx = i;
+                }
+                if (p[i].bt == min_bt) {
+                    if (p[i].at < p[shortest_idx].at) {
+                        shortest_idx = i;
+                    }
+                }
+            }
+        }
+
+        if (shortest_idx == -1) {
+            current_time++;
+            continue;
+        }
+
+        // Execute process
+        gantt_p[g_idx] = p[shortest_idx].pid;
+        gantt_time[g_idx] = current_time;
+        g_idx++;
+
+        current_time += p[shortest_idx].bt;
+        p[shortest_idx].ct = current_time;
+        p[shortest_idx].tat = p[shortest_idx].ct - p[shortest_idx].at;
+        p[shortest_idx].wt = p[shortest_idx].tat - p[shortest_idx].bt;
+        
+        total_wt += p[shortest_idx].wt;
+        total_tat += p[shortest_idx].tat;
+
+        p[shortest_idx].completed = 1;
+        completed_count++;
+    }
+    gantt_time[g_idx] = current_time;
+
+    // Print Gantt chart nicely
+    for (int i = 0; i < g_idx; i++) {
+        printf(" P%d |", gantt_p[i]);
+    }
+    printf("\n");
+    for (int i = 0; i <= g_idx; i++) {
+        printf("%d\t", gantt_time[i]);
+    }
+    printf("\n\n");
+
+    // Print Process Table
+    printf("PID\tArrival\tBurst\tCompletion\tTurnaround\tWaiting\n");
+    for (int i = 0; i < n; i++) {
+        printf("P%d\t%d\t%d\t%d\t\t%d\t\t%d\n", 
+               p[i].pid, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
+    }
+
+    printf("\nAverage Waiting Time: %.2f", total_wt / n);
+    printf("\nAverage Turnaround Time: %.2f\n", total_tat / n);
+
+    return 0;
+}
